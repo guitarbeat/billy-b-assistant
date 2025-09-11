@@ -1,0 +1,831 @@
+From 8da35ec734c6422eb0697930709caecd3a69f2bc Mon Sep 17 00:00:00 2001
+From: Cursor Agent <cursoragent@cursor.com>
+Date: Thu, 11 Sep 2025 06:27:47 +0000
+Subject: [PATCH] docs: improve README; chore: expand .gitignore
+
+---
+ .gitignore | 374 +++++++++++++++++++++++++++++++++++++++++++++++------
+ README.md  | 288 +++++++++++++++++++++--------------------
+ 2 files changed, 480 insertions(+), 182 deletions(-)
+
+diff --git a/.gitignore b/.gitignore
+index 0db2c7a..9466f67 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1,70 +1,358 @@
+-# MACOS-SPECIFIC FILES
+-## General
+-.DS_Store
+-.AppleDouble
+-.LSOverride
+-Icon[]
++# ===========================================
++# Billy B-Assistant .gitignore
++# ===========================================
+ 
+-## Thumbnails
+-._*
++# ===========================================
++# PYTHON
++# ===========================================
++# Byte-compiled / optimized / DLL files
++__pycache__/
++*.py[cod]
++*$py.class
+ 
+-## Files that might appear in the root of a volume
+-.DocumentRevisions-V100
+-.fseventsd
++# C extensions
++*.so
++
++# Distribution / packaging
++.Python
++build/
++develop-eggs/
++dist/
++downloads/
++eggs/
++.eggs/
++lib/
++lib64/
++parts/
++sdist/
++var/
++wheels/
++pip-wheel-metadata/
++share/python-wheels/
++*.egg-info/
++.installed.cfg
++*.egg
++MANIFEST
++
++# PyInstaller
++*.manifest
++*.spec
++
++# Installer logs
++pip-log.txt
++pip-delete-this-directory.txt
++
++# Unit test / coverage reports
++htmlcov/
++.tox/
++.nox/
++.coverage
++.coverage.*
++.cache
++nosetests.xml
++coverage.xml
++*.cover
++*.py,cover
++.hypothesis/
++.pytest_cache/
++
++# Translations
++*.mo
++*.pot
++
++# Django stuff:
++*.log
++local_settings.py
++db.sqlite3
++db.sqlite3-journal
++
++# Flask stuff:
++instance/
++.webassets-cache
++
++# Scrapy stuff:
++.scrapy
++
++# Sphinx documentation
++docs/_build/
++
++# PyBuilder
++target/
++
++# Jupyter Notebook
++.ipynb_checkpoints
++
++# IPython
++profile_default/
++ipython_config.py
++
++# pyenv
++.python-version
++
++# pipenv
++Pipfile.lock
++
++# PEP 582
++__pypackages__/
++
++# Celery stuff
++celerybeat-schedule
++celerybeat.pid
++
++# SageMath parsed files
++*.sage.py
++
++# Environments
++.env
++.venv
++env/
++venv/
++ENV/
++env.bak/
++venv.bak/
++
++# Spyder project settings
++.spyderproject
++.spyproject
++
++# Rope project settings
++.ropeproject
++
++# mkdocs documentation
++/site
++
++# mypy
++.mypy_cache/
++.dmypy.json
++dmypy.json
++
++# Pyre type checker
++.pyre/
++
++# ===========================================
++# BILLY B-ASSISTANT SPECIFIC
++# ===========================================
++# Configuration files (contain sensitive data)
++.env
++persona.ini
++versions.ini
++
++# Audio files and recordings
++*.wav
++*.mp3
++*.flac
++*.aac
++sounds/recordings/
++sounds/temp/
++
++# Log files
++*.log
++logs/
++billy.log
++
++# Runtime data
++pids
++*.pid
++*.seed
++*.pid.lock
++
++# Temporary files
++*.tmp
++*.temp
++temp/
++tmp/
++
++# Backup files
++*.bak
++*.backup
++*.old
++
++# ===========================================
++# RASPBERRY PI / LINUX
++# ===========================================
++# System files
++.DS_Store
++.DS_Store?
++._*
+ .Spotlight-V100
+-.TemporaryItems
+ .Trashes
+-.VolumeIcon.icns
+-.com.apple.timemachine.donotpresent
++ehthumbs.db
++Thumbs.db
+ 
+-## Directories potentially created on remote AFP share
+-.AppleDB
+-.AppleDesktop
+-Network Trash Folder
+-Temporary Items
+-.apdisk
++# SSH keys
++*.pem
++*.key
++id_rsa
++id_rsa.pub
++
++# System logs
++/var/log/
++*.log
++
++# ===========================================
++# WEB CONFIG (Node.js)
++# ===========================================
++# Dependencies
++webconfig/node_modules/
++webconfig/npm-debug.log*
++webconfig/yarn-debug.log*
++webconfig/yarn-error.log*
++
++# Runtime data
++webconfig/pids
++webconfig/*.pid
++webconfig/*.seed
++webconfig/*.pid.lock
++
++# Coverage directory used by tools like istanbul
++webconfig/coverage/
++
++# nyc test coverage
++webconfig/.nyc_output
++
++# Grunt intermediate storage
++webconfig/.grunt
++
++# Bower dependency directory
++webconfig/bower_components
++
++# node-waf configuration
++webconfig/.lock-wscript
+ 
+-# WINDOWS-SPECIFIC FILES
+-## Windows thumbnail cache files
++# Compiled binary addons
++webconfig/build/Release
++
++# Dependency directories
++webconfig/jspm_packages/
++
++# Optional npm cache directory
++webconfig/.npm
++
++# Optional REPL history
++webconfig/.node_repl_history
++
++# Output of 'npm pack'
++webconfig/*.tgz
++
++# Yarn Integrity file
++webconfig/.yarn-integrity
++
++# ===========================================
++# IDE / EDITORS
++# ===========================================
++# JetBrains IDEs
++.idea/
++*.iml
++*.ipr
++*.iws
++
++# Visual Studio Code
++.vscode/
++*.code-workspace
++
++# Sublime Text
++*.sublime-project
++*.sublime-workspace
++
++# Vim
++*.swp
++*.swo
++*~
++
++# Emacs
++*~
++\#*\#
++/.emacs.desktop
++/.emacs.desktop.lock
++*.elc
++auto-save-list
++tramp
++.\#*
++
++# ===========================================
++# WINDOWS
++# ===========================================
++# Windows thumbnail cache files
+ Thumbs.db
+ Thumbs.db:encryptable
+ ehthumbs.db
+ ehthumbs_vista.db
+ 
+-## Dump file
++# Dump file
+ *.stackdump
+ 
+-## Folder config file
++# Folder config file
+ [Dd]esktop.ini
+ 
+-## Recycle Bin used on file shares
++# Recycle Bin used on file shares
+ $RECYCLE.BIN/
+ 
+-## Windows Installer files
++# Windows Installer files
+ *.cab
+ *.msi
+ *.msix
+ *.msm
+ *.msp
+ 
+-## Windows shortcuts
++# Windows shortcuts
+ *.lnk
+ 
+-# IDE-SPECIFIC FILES
+-.idea/				# JetBrains IDEs
+-.vscode/			# VS Code settings
+-*.suo				# Visual Studio solution user options
+-*.user				# Visual Studio user options
+-*.vcproj.filters	# Visual C++ project filters
+-*.sln.docstates		# Visual Studio solution document states
++# ===========================================
++# MACOS
++# ===========================================
++# General
++.DS_Store
++.AppleDouble
++.LSOverride
++Icon
+ 
+-# PYTHON-SPECIFIC FILES
+-core/__pycache__/
++# Thumbnails
++._*
+ 
+-# PROJECT-SPECIFIC FILES
+-.idea
+-.env
+-persona.ini
+-versions.ini
+-venv
+-webconfig/node_modules
++# Files that might appear in the root of a volume
++.DocumentRevisions-V100
++.fseventsd
++.Spotlight-V100
++.TemporaryItems
++.Trashes
++.VolumeIcon.icns
++.com.apple.timemachine.donotpresent
++
++# Directories potentially created on remote AFP share
++.AppleDB
++.AppleDesktop
++Network Trash Folder
++Temporary Items
++.apdisk
++
++# ===========================================
++# MISC
++# ===========================================
++# Archives
++*.7z
++*.dmg
++*.gz
++*.iso
++*.jar
++*.rar
++*.tar
++*.zip
++
++# Database files
++*.db
++*.sqlite
++*.sqlite3
++
++# Compiled files
++*.com
++*.class
++*.dll
++*.exe
++*.o
++*.so
++
++# Debug files
++*.dSYM/
++*.su
++*.idb
++*.pdb
+diff --git a/README.md b/README.md
+index 8d903dd..60d2586 100644
+--- a/README.md
++++ b/README.md
+@@ -1,114 +1,149 @@
+-# Billy B-Assistant
++# 🐟 Billy B-Assistant
+ 
+-The **Billy Bass Assistant** is a Raspberry Pi–powered voice assistant embedded inside a Big Mouth Billy Bass Animatronic. It streams conversation using the OpenAI Realtime API, turns its head, flaps it's tail and moves his mouth based on what he is saying.
++[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
++[![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-5-red.svg)](https://www.raspberrypi.org/)
++[![OpenAI](https://img.shields.io/badge/OpenAI-Realtime%20API-green.svg)](https://openai.com/)
++[![License](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE.md)
+ 
+-> **This project is still in BETA.** Things might crash, get stuck or make Billy scream uncontrollably (ok that last part maybe not literally but you get the point). Proceed with fishy caution.
++The **Billy Bass Assistant** is a Raspberry Pi–powered voice assistant embedded inside a Big Mouth Billy Bass Animatronic. It streams conversation using the OpenAI Realtime API, turns its head, flaps its tail, and moves its mouth based on what it's saying.
+ 
+-![Billy Bathroom](./docs/images/billy_bathroom.jpeg)
+-![Billy UI](./docs/images/web-UI.png)
+-<img src="./docs/images/web-UI-Mobile.png" alt="Billy UI Mobile" style="width: 33%;" />
+----
++> ⚠️ **This project is still in BETA.** Things might crash, get stuck, or make Billy scream uncontrollably (ok that last part maybe not literally but you get the point). Proceed with fishy caution.
+ 
+-## Features
+-
+-- Realtime conversations using OpenAI Realtime API
+-- Personality system with configurable traits (e.g., snark, charm)
+-- Physical button to start/interact/intervene
+-- 3D-printable backplate for housing USB microphone and speaker
+-- Support for the Modern Billy hardware version with 2 motors as well as the Classic Billy hardware version (3 motors)
+-- Lightweight web UI:
+-  - Adjust settings and persona of Billy
+-  - View debug logs
+-  - Start/stop/restart Billy
+-  - Export/Import of settings and persona
+-  - Hostname and Port configuration
+-- MQTT support:
+-  - sensor with status updates of Billy (idle, speaking, listening)
+-  - `billy/say` topic for triggering spoken messages remotely
+-  - Raspberry Pi Safe Shutdown command
+-- Home Assistant command passthrough using the Conversation API
+-- Custom Song Singing and animation mode
++## 🎯 Quick Start
+ 
+----
++For experienced users who want to get Billy running quickly:
+ 
+-## Hardware build instructions
++1. **Flash Raspberry Pi OS Lite** with WiFi and SSH enabled
++2. **Clone and setup**: `git clone https://github.com/Thokoop/Billy-B-assistant.git && cd Billy-B-assistant`
++3. **Install dependencies**: `./setup/install.sh` (or follow manual setup below)
++4. **Configure**: Add your OpenAI API key to `.env` file
++5. **Run**: `python3 main.py`
+ 
+-See [BUILDME.md](./docs/BUILDME.md) for detailed build/wiring instructions.
++> 📖 **New to this?** Check out the [detailed setup instructions](#installation) below.
+ 
++![Billy Bathroom](./docs/images/billy_bathroom.jpeg)
++![Billy UI](./docs/images/web-UI.png)
++<img src="./docs/images/web-UI-Mobile.png" alt="Billy UI Mobile" style="width: 33%;" />
+ ---
+ 
+-# Instructions
++## ✨ Features
++
++### 🎤 **Voice & Conversation**
++- **Real-time conversations** using OpenAI Realtime API
++- **Dynamic personality system** with configurable traits (snark, charm, humor, etc.)
++- **Physical button interface** for easy start/interact/intervene
++- **Multi-language support** (English, Dutch, Italian)
++
++### 🤖 **Hardware & Movement**
++- **3D-printable backplate** for housing USB microphone and speaker
++- **Dual hardware support**: Modern Billy (2 motors) and Classic Billy (3 motors)
++- **Synchronized animations**: Head movement, tail flapping, and mouth sync
++- **Motor safety features** with GPIO protection
++
++### 🌐 **Web Interface**
++- **Lightweight web UI** accessible via `http://billy.local`
++- **Real-time configuration** of settings and personality
++- **Live debug logs** and system monitoring
++- **Service management** (start/stop/restart Billy)
++- **Export/Import** of settings and persona
++- **Mobile-responsive** design
++
++### 🏠 **Smart Home Integration**
++- **MQTT support** with status sensors (idle, speaking, listening)
++- **Home Assistant integration** via Conversation API
++- **Remote control** through `billy/say` MQTT topic
++- **Smart home commands** ("Turn off the lights", "Set temperature")
++
++### 🎵 **Entertainment**
++- **Custom song mode** with synchronized audio and movement
++- **Lip-sync animation** based on vocal tracks
++- **Beat-synchronized tail flapping** using drum tracks
++- **Configurable song metadata** for perfect timing
+ 
+-## A. Flash Raspberry Pi OS Lite
+-
+-Flash the operating system onto a microSD card using the [Raspberry Pi Imager](https://www.raspberrypi.com/software/).
+-
+-1. In the Imager,
+-    - **Choose device** `Raspberry Pi 5` (to match your hardware)
+-    - **Choose OS** `Raspberry Pi OS (other)` and then `Raspberry Pi OS Lite (64-bit)`
+-    - **Choose storage** and select your microSD card
++---
+ 
+-2. You will be asked **Would you like to apply OS customisation settings?**, select `Edit Settings`
+-    - On the `General` tab,
+-      - **Set hostname** (e.g., `raspberrypi.local`)
+-      - **Set username and password** (`pi` and `pi` is the default)
+-      - **Configure wireless LAN** (SSID, Password, Wireless LAN country)
+-      - **Set locale settings** (Time zone, Keyboard layout)
+-    - On the `Services` tab,
+-      - **Enable SSH**
+-      - Use password authentication or provide an authorized key
+-    - On the `Options` tab, set to your preference
+-      - Click `Save`
++## 📋 Table of Contents
+ 
+-3. Back on the **Would you like to apply OS customisation settings?**, select `Yes` to apply settings
++- [Quick Start](#-quick-start)
++- [Features](#-features)
++- [Installation](#-installation)
++- [Configuration](#-configuration)
++- [Hardware Setup](#-hardware-setup)
++- [Web Interface](#-web-interface)
++- [Custom Songs](#-custom-songs)
++- [Home Assistant Integration](#-home-assistant-integration)
++- [Troubleshooting](#-troubleshooting)
++- [Contributing](#-contributing)
+ 
+-4. You will be asked **All existing data on 'SDXC Card' will be erased. Are you sure you want to continue?**, select `Yes`
++---
+ 
+-5. Wait for flash to complete and verify
++## 🔧 Hardware Setup
+ 
+-6. Insert the SD card into the Raspberry Pi and power it on
++See [BUILDME.md](./docs/BUILDME.md) for detailed build/wiring instructions.
+ 
+ ---
+ 
+-## B. Initial Setup
+-
+-Connect via SSH from your computer:
++## 📦 Installation
+ 
+-```bash
+-ssh pi@raspberrypi.local
+-```
++### Step 1: Flash Raspberry Pi OS Lite
+ 
+-Replace `pi` with your username (e.g. `billy`) if you opted to change it in the previous step.
++Flash the operating system onto a microSD card using the [Raspberry Pi Imager](https://www.raspberrypi.com/software/).
+ 
+-Expand the filesystem to fill available storage:
++1. **Download and open** Raspberry Pi Imager
++2. **Choose device**: `Raspberry Pi 5` (or your specific model)
++3. **Choose OS**: `Raspberry Pi OS (other)` → `Raspberry Pi OS Lite (64-bit)`
++4. **Choose storage**: Select your microSD card
++5. **Configure settings** (click the gear icon):
++   - **General tab**:
++     - Set hostname: `billy` (or your preference)
++     - Set username/password: `pi`/`pi` (or create custom)
++     - Configure WiFi: SSID, password, country
++     - Set locale: Time zone, keyboard layout
++   - **Services tab**:
++     - ✅ Enable SSH
++     - Choose authentication method
++   - **Options tab**: Set to your preference
++6. **Flash** the image to your SD card
++7. **Insert SD card** into Raspberry Pi and power on
++
++### Step 2: Initial Setup
++
++Connect to your Raspberry Pi via SSH:
+ 
+ ```bash
+-raspi-config --expand-rootfs
++ssh pi@billy.local
++# or: ssh pi@<your-hostname>.local
+ ```
+ 
+-Update the system:
++**Expand filesystem** and **update system**:
+ 
+ ```bash
++# Expand filesystem to use full SD card
++sudo raspi-config --expand-rootfs
++
++# Update system packages
+ sudo apt update && sudo apt upgrade -y
++
++# Reboot to apply changes
+ sudo reboot
+ ```
+ 
+----
+-
+-## C. GPIO Voltage Configuration (Motor Safety)
++### Step 3: GPIO Safety Configuration
+ 
+-When the Raspberry Pi powers up, all GPIO pins are in an **undefined state** until the Billy B-Assistant software takes control. This can cause the **motor driver board to activate or stall** the motors momentarily. To prevent stalling and overheating the motors in case the software doesn't start, we set all the gpio pins to Low at boot:
++⚠️ **Important**: Configure GPIO pins to prevent motor damage during boot.
+ 
+-### Set GPIO pins low on boot using `/boot/config.txt`
++When the Raspberry Pi starts, GPIO pins are in an undefined state until Billy's software takes control. This can cause motors to stall or overheat.
+ 
+-Add the following lines to `/boot/config.txt` to set all motor-related GPIOs to low at boot:
++**Add safety configuration** to `/boot/config.txt`:
+ 
+ ```bash
+ sudo nano /boot/config.txt
+ ```
+ 
++Add these lines at the end:
++
+ ```ini
+-# Set GPIOs to output-low (safe state)
++# Set GPIOs to output-low (safe state for motors)
+ gpio=5=op,dl
+ gpio=6=op,dl
+ gpio=12=op,dl
+@@ -117,44 +152,46 @@ gpio=19=op,dl
+ gpio=26=op,dl
+ ```
+ 
+-`op` = output  
+-`dl` = drive low (0V)  
++- `op` = output mode
++- `dl` = drive low (0V)
+ 
+-This ensures the H-bridge input pins are inactive and motors remain off until the software initializes them properly.
++This ensures motors stay off until Billy's software properly initializes them.
+ 
+----
++### Step 4: Audio Configuration
+ 
+-## D. Set Sound Configuration
++Configure audio input/output for Billy's microphone and speaker.
+ 
+-List all output soundcards and digital audio devices:
++**1. Identify audio devices:**
+ 
+ ```bash
++# List output devices (speakers)
+ aplay -l
+-```
+-
+-List all input soundcards and digital audio devices:
+ 
+-```bash
++# List input devices (microphones)
+ arecord -l
+ ```
+ 
+-Edit the ALSA configuration. Replace `<speaker card>` with the device number of the speakers determined earlier:
++**2. Configure ALSA defaults:**
+ 
+ ```bash
+ sudo nano /usr/share/alsa/alsa.conf
+ ```
+ 
++Replace `<speaker_card>` with your speaker device number:
++
+ ```ini
+-defaults.ctl.card <speaker card>
+-defaults.pcm.card <speaker card>
++defaults.ctl.card <speaker_card>
++defaults.pcm.card <speaker_card>
+ ```
+ 
+-Also create a `asound.conf` file (this file does not exist on a base system image). Replace `<mic card>,<mic sub>` and `<speaker card>,<speaker sub>` with the device numbers determined earlier:
++**3. Create audio configuration file:**
+ 
+ ```bash
+ sudo nano /etc/asound.conf
+ ```
+ 
++Replace `<mic_card>,<mic_sub>` and `<speaker_card>,<speaker_sub>` with your device numbers:
++
+ ```ini
+ pcm.!default {
+     type asym
+@@ -165,98 +202,71 @@ pcm.!default {
+ pcm.mic {
+     type plug
+     slave {
+-        pcm "plughw:<mic card>,<mic sub>"
++        pcm "plughw:<mic_card>,<mic_sub>"
+     }
+ }
+ 
+ pcm.speaker {
+     type plug
+     slave {
+-        pcm "plughw:<speaker card>,<speaker sub>"
++        pcm "plughw:<speaker_card>,<speaker_sub>"
+     }
+ }
+ ```
+ 
+-Adjust the playback and record levels:
+-
+-```bash
+-alsamixer
+-```
+-
+-Test output sound configuration:
++**4. Test audio configuration:**
+ 
+ ```bash
++# Test speakers
+ aplay -D default /usr/share/sounds/alsa/Front_Center.wav
+-```
+ 
+-Test microphone input configuration:
+-
+-```bash
++# Test microphone (press Ctrl+C to stop)
+ arecord -vvv -f dat /dev/null
+-```
+ 
+----
++# Adjust volume levels
++alsamixer
++```
+ 
+-## E. Reboot to Apply Changes
++### Step 5: Reboot and Install Billy
+ 
+-Then reboot the Pi:
++**Reboot to apply all changes:**
+ 
+ ```bash
+ sudo reboot
+ ```
+ 
+----
+-
+-## F. Clone the Project
+-
+-On the Raspberry Pi:
++**Clone and setup Billy B-Assistant:**
+ 
+ ```bash
+-cd ~
+-sudo apt install git
+-git clone https://github.com/Thokoop/billy-b-assistant.git
+-```
+-
+----
+-
+-## G. Python Setup
++# Install git if not already installed
++sudo apt install git -y
+ 
+-Make sure Python 3 is installed:
+-
+-```bash
+-python3 --version
+-```
+-
+-Install required system packages:
++# Clone the repository
++cd ~
++git clone https://github.com/Thokoop/Billy-B-assistant.git
++cd Billy-B-assistant
+ 
+-```bash
++# Install system dependencies
+ sudo apt update
+ sudo apt install -y python3-pip libportaudio2 ffmpeg
+-```
+-
+-Create Python virtual environment:
+ 
+-```bash
+-cd billy-b-assistant
++# Create and activate virtual environment
+ python3 -m venv venv
+-```
+-
+-Activate the Python virtual environment:
+-
+-```bash
+ source ./venv/bin/activate
+-```
+ 
+-To confirm the virtual environment is activated, check the location of your Python interpreter:
+-
+-```bash
+-which python
++# Install Python dependencies
++pip3 install -r requirements.txt
+ ```
+ 
+-Install required Python dependencies into the virtual environment:
++**Verify installation:**
+ 
+ ```bash
+-pip3 install -r ./requirements.txt
++# Check Python version (should be 3.11+)
++python3 --version
++
++# Verify virtual environment is active
++which python
++# Should show: /home/pi/Billy-B-assistant/venv/bin/python
+ ```
+ 
+ ---
+-- 
+2.48.1
+
