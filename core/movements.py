@@ -8,6 +8,18 @@ import lgpio
 import numpy as np
 
 from .config import is_classic_billy
+from .constants import (
+    DEFAULT_MOTOR_FREQ,
+    DEFAULT_HEAD_SPEED,
+    DEFAULT_TAIL_SPEED,
+    DEFAULT_HEAD_DURATION,
+    DEFAULT_TAIL_DURATION,
+    DEFAULT_MOTOR_WATCHDOG_INTERVAL,
+    DEFAULT_MOTOR_IDLE_TIMEOUT,
+    DEFAULT_INTERLUDE_DELAY_MIN,
+    DEFAULT_INTERLUDE_DELAY_MAX,
+    DEFAULT_TAIL_MOVE_INTERVAL,
+)
 
 
 # === Configuration ===
@@ -17,7 +29,7 @@ print(f"⚙️ Using third motor: {USE_THIRD_MOTOR}")
 
 # === GPIO Setup ===
 h = lgpio.gpiochip_open(0)
-FREQ = 10000  # PWM frequency
+FREQ = DEFAULT_MOTOR_FREQ
 
 # Pin mapping
 MOUTH_IN1 = 12  # PWM0_CHAN0, pin 32
@@ -79,8 +91,8 @@ def move_head(state="on"):
 
     def _move_head_on():
         lgpio.gpio_write(h, HEAD_IN2, 0)
-        lgpio.tx_pwm(h, HEAD_IN1, FREQ, 80)
-        time.sleep(0.5)
+        lgpio.tx_pwm(h, HEAD_IN1, FREQ, DEFAULT_HEAD_SPEED)
+        time.sleep(DEFAULT_HEAD_DURATION)
         lgpio.tx_pwm(h, HEAD_IN1, FREQ, 100)  # Stay extended
 
     if state == "on":
@@ -92,11 +104,11 @@ def move_head(state="on"):
         head_out = False
 
 
-def move_tail(duration=0.2):
+def move_tail(duration=DEFAULT_TAIL_DURATION):
     if USE_THIRD_MOTOR:
-        run_motor(TAIL_IN1, TAIL_IN2, speed_percent=80, duration=duration)
+        run_motor(TAIL_IN1, TAIL_IN2, speed_percent=DEFAULT_TAIL_SPEED, duration=duration)
     else:
-        run_motor(HEAD_IN2, HEAD_IN1, speed_percent=80, duration=duration)
+        run_motor(HEAD_IN2, HEAD_IN1, speed_percent=DEFAULT_TAIL_SPEED, duration=duration)
 
 
 def move_tail_async(duration=0.3):
@@ -151,7 +163,7 @@ def flap_from_pcm_chunk(
 def _interlude_routine():
     try:
         move_head("off")
-        time.sleep(random.uniform(0.2, 2))
+        time.sleep(random.uniform(DEFAULT_INTERLUDE_DELAY_MIN, DEFAULT_INTERLUDE_DELAY_MAX))
 
         flap_count = random.randint(1, 3)
         for _ in range(flap_count):
@@ -197,10 +209,10 @@ def motor_watchdog():
         if active:
             last_activity = now
             idle = False
-        elif not idle and now - last_activity > 60:
+        elif not idle and now - last_activity > DEFAULT_MOTOR_IDLE_TIMEOUT:
             stop_all_motors()
             idle = True
-        time.sleep(1)
+        time.sleep(DEFAULT_MOTOR_WATCHDOG_INTERVAL)
 
 
 def start_motor_watchdog():

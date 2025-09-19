@@ -12,6 +12,7 @@ import websockets.asyncio.client
 import websockets.exceptions
 
 from . import audio
+from .audio_utils import create_audio_processor, create_stream_processor
 from .config import (
     CHUNK_MS,
     DEBUG_MODE,
@@ -26,11 +27,31 @@ from .config import (
     TEXT_ONLY_MODE,
     VOICE,
 )
+from .constants import (
+    SUCCESS_SESSION_STARTED,
+    WS_SESSION_UPDATED,
+    WS_RESPONSE_DONE,
+    WS_RESPONSE_AUDIO,
+    WS_RESPONSE_AUDIO_DELTA,
+    WS_RESPONSE_TEXT_DELTA,
+    WS_RESPONSE_AUDIO_TRANSCRIPT_DELTA,
+    WS_RESPONSE_FUNCTION_CALL_ARGUMENTS_DONE,
+    WS_INPUT_AUDIO_BUFFER_COMMIT,
+    WS_ERROR,
+    STATE_LISTENING,
+    STATE_SPEAKING,
+    STATE_IDLE,
+    ERROR_NETWORK_UNREACHABLE,
+    ERROR_INVALID_API_KEY,
+    NO_API_KEY_WAV,
+    NO_WIFI_WAV,
+)
 from .ha import send_conversation_prompt
 from .mic import MicManager
 from .movements import move_tail_async, stop_all_motors
 from .mqtt import mqtt_publish
 from .personality import update_persona_ini
+from .websocket_client import OpenAIConnectionConfig, OpenAIWebSocketClient
 
 
 TOOLS = [
@@ -76,10 +97,11 @@ TOOLS = [
 
 class BillySession:
     def __init__(self, interrupt_event=None):
-        self.ws = None
+        self.ws_client: OpenAIWebSocketClient | None = None
         self.ws_lock: asyncio.Lock = asyncio.Lock()
         self.loop = None
-        self.audio_buffer = bytearray()
+        self.audio_processor = create_audio_processor()
+        self.stream_processor = create_stream_processor(self.audio_processor)
         self.committed = False
         self.first_text = True
         self.full_response_text = ""
@@ -101,7 +123,7 @@ class BillySession:
         self.loop = asyncio.get_running_loop()
         print("\n⏱️ Session starting...")
 
-        self.audio_buffer.clear()
+        self.stream_processor.clear_buffers()
         self.committed = False
         self.first_text = True
         self.full_response_text = ""
@@ -111,37 +133,21 @@ class BillySession:
         self.allow_mic_input = True
 
         async with self.ws_lock:
-            if self.ws is None:
-                uri = f"wss://api.openai.com/v1/realtime?model={OPENAI_MODEL}"
-                headers = {
-                    "Authorization": f"Bearer {OPENAI_API_KEY}",
-                    "openai-beta": "realtime=v1",
-                }
+            if self.ws_client is None:
+                # Configure WebSocket connection
+                config = OpenAIConnectionConfig(
+                    modalities=["text"] if TEXT_ONLY_MODE else ["audio", "text"],
+                    instructions=INSTRUCTIONS,
+                    tools=TOOLS
+                )
 
                 try:
-                    self.ws = await websockets.asyncio.client.connect(
-                        uri, additional_headers=headers
-                    )
-                    await self.ws.send(
-                        json.dumps({
-                            "type": "session.update",
-                            "session": {
-                                "voice": VOICE,
-                                "modalities": ["text"]
-                                if TEXT_ONLY_MODE
-                                else ["audio", "text"],
-                                "input_audio_format": "pcm16",
-                                "output_audio_format": "pcm16",
-                                "turn_detection": {"type": "server_vad"},
-                                "instructions": INSTRUCTIONS,
-                                "tools": TOOLS,
-                            },
-                        })
-                    )
+                    self.ws_client = OpenAIWebSocketClient(config)
+                    await self.ws_client.connect()
 
                 except socket.gaierror:
-                    print("📡 Network unreachable or DNS failed. Playing nowifi.wav...")
-                    path = "sounds/nowifi.wav"
+                    print(f"📡 {ERROR_NETWORK_UNREACHABLE} Playing nowifi.wav...")
+                    path = NO_WIFI_WAV
                     if os.path.exists(path):
                         await asyncio.to_thread(audio.enqueue_wav_to_playback, path)
                         await asyncio.to_thread(audio.playback_queue.join)
@@ -173,14 +179,15 @@ class BillySession:
             self.last_activity[0] = time.time()
             self.user_spoke_after_assistant = True
 
-        audio.send_mic_audio(self.ws, samples, self.loop)
+        if self.ws_client:
+            audio.send_mic_audio(self.ws_client.ws, samples, self.loop)
 
     async def run_stream(self):
         if not TEXT_ONLY_MODE and audio.playback_done_event.is_set():
             await asyncio.to_thread(audio.playback_done_event.wait)
 
         print("🎙️ Mic stream active. Say something...")
-        mqtt_publish("billy/state", "listening")
+        mqtt_publish("billy/state", STATE_LISTENING)
 
         # Ensure we hold a reference to the mic checker task, or it may be destroyed.
         self.mic_timeout_task: asyncio.Task = asyncio.create_task(
@@ -190,11 +197,11 @@ class BillySession:
         try:
             self.mic.start(self.mic_callback)
 
-            async for message in self.ws:
+            async for data in self.ws_client.listen_for_response():
                 if not self.session_active.is_set():
                     print("🚪 Session marked as inactive, stopping stream loop.")
                     break
-                data = json.loads(message)
+                    
                 if DEBUG_MODE and (
                     DEBUG_MODE_INCLUDE_DELTA
                     or not data.get('type', "").endswith('delta')
@@ -203,7 +210,7 @@ class BillySession:
 
                 # If the session has been updated properly, flag it as so. We can't
                 # send audio until the session is fully initialized.
-                if data.get('type', "") == 'session_updated':
+                if data.get('type', "") == WS_SESSION_UPDATED:
                     self.session_initialized = True
 
                 await self.handle_message(data)
@@ -230,22 +237,15 @@ class BillySession:
         if data['type'] == 'response.audio_transcript.done':
             self.full_response_text += "\n\n"
 
-        if not TEXT_ONLY_MODE and data["type"] in (
-            "response.audio",
-            "response.audio.delta",
-        ):
+        if not TEXT_ONLY_MODE and data["type"] in (WS_RESPONSE_AUDIO, WS_RESPONSE_AUDIO_DELTA):
             if not self.committed and self.session_initialized:
                 async with self.ws_lock:
-                    await self.ws.send(
-                        json.dumps({"type": "input_audio_buffer.commit"})
-                    )
+                    await self.ws_client.commit_audio_buffer()
                 self.committed = True
             audio_b64 = data.get("audio") or data.get("delta")
             if audio_b64:
-                audio_chunk = base64.b64decode(audio_b64)
-                self.audio_buffer.extend(audio_chunk)
+                self.stream_processor.process_audio_delta(audio_b64)
                 self.last_activity[0] = time.time()
-                audio.playback_queue.put(audio_chunk)
 
                 if self.interrupt_event.is_set():
                     print("⛔ Assistant turn interrupted. Stopping response playback.")
@@ -261,19 +261,19 @@ class BillySession:
                     return
 
         if (
-            data["type"] in ("response.audio_transcript.delta", "response.text.delta")
+            data["type"] in (WS_RESPONSE_AUDIO_TRANSCRIPT_DELTA, WS_RESPONSE_TEXT_DELTA)
             and "delta" in data
         ):
             self.allow_mic_input = False
             if self.first_text:
-                mqtt_publish("billy/state", "speaking")
+                mqtt_publish("billy/state", STATE_SPEAKING)
                 print("\n🐟 Billy: ", end='', flush=True)
                 self.first_text = False
                 self.user_spoke_after_assistant = False
             print(data["delta"], end='', flush=True)
             self.full_response_text += data["delta"]
 
-        if data["type"] == "response.function_call_arguments.done":
+        if data["type"] == WS_RESPONSE_FUNCTION_CALL_ARGUMENTS_DONE:
             if data.get("name") == "update_personality":
                 args = json.loads(data["arguments"])
                 changes = []
@@ -297,22 +297,8 @@ class BillySession:
                         f"Okay, {trait} is now set to {val}%." for trait, val in changes
                     ])
                     async with self.ws_lock:
-                        await self.ws.send(
-                            json.dumps({
-                                "type": "conversation.item.create",
-                                "item": {
-                                    "type": "message",
-                                    "role": "user",
-                                    "content": [
-                                        {
-                                            "type": "input_text",
-                                            "text": confirmation_text,
-                                        }
-                                    ],
-                                },
-                            })
-                        )
-                        await self.ws.send(json.dumps({"type": "response.create"}))
+                        await self.ws_client.send_message(confirmation_text)
+                        await self.ws_client.create_response()
 
             elif data.get("name") == "play_song":
                 args = json.loads(data["arguments"])
@@ -345,40 +331,15 @@ class BillySession:
                         print(f"\n📣 {ha_message}")
 
                         async with self.ws_lock:
-                            await self.ws.send(
-                                json.dumps({
-                                    "type": "conversation.item.create",
-                                    "item": {
-                                        "type": "message",
-                                        "role": "user",
-                                        "content": [
-                                            {"type": "input_text", "text": ha_message}
-                                        ],
-                                    },
-                                })
-                            )
-                            await self.ws.send(json.dumps({"type": "response.create"}))
+                            await self.ws_client.send_message(ha_message)
+                            await self.ws_client.create_response()
                     else:
                         print(f"⚠️ Failed to parse HA response: {ha_response}")
                         async with self.ws_lock:
-                            await self.ws.send(
-                                json.dumps({
-                                    "type": "conversation.item.create",
-                                    "item": {
-                                        "type": "message",
-                                        "role": "user",
-                                        "content": [
-                                            {
-                                                "type": "input_text",
-                                                "text": "Home Assistant didn't understand the request.",
-                                            }
-                                        ],
-                                    },
-                                })
-                            )
-                            await self.ws.send(json.dumps({"type": "response.create"}))
+                            await self.ws_client.send_message("Home Assistant didn't understand the request.")
+                            await self.ws_client.create_response()
 
-        elif data["type"] == "response.done":
+        elif data["type"] == WS_RESPONSE_DONE:
             error = data.get("status_details", {}).get("error")
             if error:
                 error_type = error.get("type")
@@ -393,13 +354,14 @@ class BillySession:
                 # Let the last audio chunk finish playing
                 await asyncio.sleep(1)
 
-                if len(self.audio_buffer) > 0:
-                    print(f"💾 Saving audio buffer ({len(self.audio_buffer)} bytes)")
-                    audio.rotate_and_save_response_audio(self.audio_buffer)
+                audio_buffer = self.stream_processor.get_audio_buffer()
+                if len(audio_buffer) > 0:
+                    print(f"💾 Saving audio buffer ({len(audio_buffer)} bytes)")
+                    audio.rotate_and_save_response_audio(audio_buffer)
                 else:
                     print("⚠️ Audio buffer was empty, skipping save.")
 
-                self.audio_buffer.clear()
+                self.stream_processor.clear_buffers()
                 audio.playback_done_event.set()
                 self.last_activity[0] = time.time()
 
@@ -411,7 +373,7 @@ class BillySession:
                 await self.stop_session()
                 return
 
-        elif data["type"] == "error":
+        elif data["type"] == WS_ERROR:
             error: dict[str, Any] = data.get('error') or {}
             stop_all_motors()
             print(
@@ -420,11 +382,9 @@ class BillySession:
             )
 
             if error.get("code") == "invalid_api_key":
-                path = "sounds/noapikey.wav"
+                path = NO_API_KEY_WAV
                 if os.path.exists(path):
-                    print(
-                        "🔐 Invalid API key detected during session. Playing noapikey.wav..."
-                    )
+                    print(f"🔐 {ERROR_INVALID_API_KEY} Playing noapikey.wav...")
                     await asyncio.to_thread(audio.enqueue_wav_to_playback, path)
                     await asyncio.to_thread(audio.playback_queue.join)
                 else:
@@ -472,13 +432,12 @@ class BillySession:
 
         if not self.session_active.is_set():
             print("🚪 Session inactive after timeout or interruption. Not restarting.")
-            mqtt_publish("billy/state", "idle")
+            mqtt_publish("billy/state", STATE_IDLE)
             stop_all_motors()
             async with self.ws_lock:
-                if self.ws:
-                    await self.ws.close()
-                    await self.ws.wait_closed()
-                    self.ws = None
+                if self.ws_client:
+                    await self.ws_client.disconnect()
+                    self.ws_client = None
             return
 
         if not self.run_mode and (
@@ -489,12 +448,12 @@ class BillySession:
             await self.start()
         else:
             print("🛑 No follow-up. Ending session.")
-            mqtt_publish("billy/state", "idle")
+            mqtt_publish("billy/state", STATE_IDLE)
             stop_all_motors()
             async with self.ws_lock:
-                await self.ws.close()
-                await self.ws.wait_closed()
-                self.ws = None
+                if self.ws_client:
+                    await self.ws_client.disconnect()
+                    self.ws_client = None
 
     async def stop_session(self):
         print("🛑 Stopping session...")
@@ -502,13 +461,13 @@ class BillySession:
         self.mic.stop()
 
         async with self.ws_lock:
-            if self.ws:
+            if self.ws_client:
                 try:
-                    await self.ws.close()
-                    await self.ws.wait_closed()
+                    await self.ws_client.disconnect()
                 except Exception as e:
                     print(f"⚠️ Error closing websocket: {e}")
-                self.ws = None
+                finally:
+                    self.ws_client = None
 
     async def request_stop(self):
         print("🛑 Stop requested via external signal.")
