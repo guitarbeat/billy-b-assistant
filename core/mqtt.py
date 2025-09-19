@@ -4,6 +4,23 @@ import subprocess
 import paho.mqtt.client as mqtt
 
 from .config import MQTT_HOST, MQTT_PASSWORD, MQTT_PORT, MQTT_USERNAME
+from .constants import (
+    MQTT_TOPIC_STATE,
+    MQTT_TOPIC_COMMAND,
+    MQTT_TOPIC_SAY,
+    STATE_IDLE,
+    STATE_LISTENING,
+    STATE_SPEAKING,
+    STATE_PLAYING_SONG,
+    COMMAND_SHUTDOWN,
+    HA_DISCOVERY_PREFIX,
+    HA_DEVICE_IDENTIFIER,
+    HA_DEVICE_NAME,
+    HA_DEVICE_MODEL,
+    HA_DEVICE_MANUFACTURER,
+    SUCCESS_MQTT_CONNECTED,
+    WARNING_MQTT_NOT_CONFIGURED,
+)
 from .movements import stop_all_motors
 
 
@@ -19,10 +36,10 @@ def on_connect(client, userdata, flags, rc):
     global mqtt_connected
     if rc == 0:
         mqtt_connected = True
-        print("🔌 MQTT connected successfully!")
+        print(SUCCESS_MQTT_CONNECTED)
         mqtt_send_discovery()
-        client.subscribe("billy/command")
-        client.subscribe("billy/say")
+        client.subscribe(MQTT_TOPIC_COMMAND)
+        client.subscribe(MQTT_TOPIC_SAY)
     else:
         print(f"⚠️ MQTT connection failed with code {rc}")
 
@@ -30,7 +47,7 @@ def on_connect(client, userdata, flags, rc):
 def start_mqtt():
     global mqtt_client
     if not mqtt_available():
-        print("⚠️ MQTT not configured, skipping.")
+        print(WARNING_MQTT_NOT_CONFIGURED)
         return
 
     mqtt_client = mqtt.Client()
@@ -40,7 +57,7 @@ def start_mqtt():
     try:
         mqtt_client.connect(MQTT_HOST, MQTT_PORT, 60)
         mqtt_client.loop_start()
-        mqtt_publish("billy/state", "idle", retain=True)
+        mqtt_publish(MQTT_TOPIC_STATE, STATE_IDLE, retain=True)
     except Exception as e:
         print(f"❌ MQTT connection error: {e}")
 
@@ -82,21 +99,23 @@ def mqtt_send_discovery():
     if not mqtt_client:
         return
 
+    device_info = {
+        "identifiers": [HA_DEVICE_IDENTIFIER],
+        "name": HA_DEVICE_NAME,
+        "model": HA_DEVICE_MODEL,
+        "manufacturer": HA_DEVICE_MANUFACTURER,
+    }
+
     # Sensor for Billy's state
     payload_sensor = {
         "name": "Billy State",
         "unique_id": "billy_state",
-        "state_topic": "billy/state",
+        "state_topic": MQTT_TOPIC_STATE,
         "icon": "mdi:fish",
-        "device": {
-            "identifiers": ["billy_bass"],
-            "name": "Big Mouth Billy Bass",
-            "model": "Billy Bassistant",
-            "manufacturer": "Thom Koopman",
-        },
+        "device": device_info,
     }
     mqtt_client.publish(
-        "homeassistant/sensor/billy/state/config",
+        f"{HA_DISCOVERY_PREFIX}/sensor/billy/state/config",
         json.dumps(payload_sensor),
         retain=True,
     )
@@ -105,17 +124,12 @@ def mqtt_send_discovery():
     payload_button = {
         "name": "Billy Shutdown",
         "unique_id": "billy_shutdown",
-        "command_topic": "billy/command",
-        "payload_press": "shutdown",
-        "device": {
-            "identifiers": ["billy_bass"],
-            "name": "Big Mouth Billy Bass",
-            "model": "Billy Bassistant",
-            "manufacturer": "Thom Koopman",
-        },
+        "command_topic": MQTT_TOPIC_COMMAND,
+        "payload_press": COMMAND_SHUTDOWN,
+        "device": device_info,
     }
     mqtt_client.publish(
-        "homeassistant/button/billy/shutdown/config",
+        f"{HA_DISCOVERY_PREFIX}/button/billy/shutdown/config",
         json.dumps(payload_button),
         retain=True,
     )
@@ -123,18 +137,13 @@ def mqtt_send_discovery():
     payload_text_input = {
         "name": "Billy Say",
         "unique_id": "billy_say",
-        "command_topic": "billy/say",
+        "command_topic": MQTT_TOPIC_SAY,
         "mode": "text",
         "max": 255,
-        "device": {
-            "identifiers": ["billy_bass"],
-            "name": "Big Mouth Billy Bass",
-            "model": "Billy Bassistant",
-            "manufacturer": "Thom Koopman",
-        },
+        "device": device_info,
     }
     mqtt_client.publish(
-        "homeassistant/text/billy/say/config",
+        f"{HA_DISCOVERY_PREFIX}/text/billy/say/config",
         json.dumps(payload_text_input),
         retain=True,
     )
@@ -142,9 +151,9 @@ def mqtt_send_discovery():
 
 def on_message(client, userdata, msg):
     print(f" \n📩 MQTT message received: {msg.topic} = {msg.payload.decode()} ")
-    if msg.topic == "billy/command":
+    if msg.topic == MQTT_TOPIC_COMMAND:
         command = msg.payload.decode().strip().lower()
-        if command == "shutdown":
+        if command == COMMAND_SHUTDOWN:
             print("\n🛑 Shutdown command received over MQTT. Shutting down...")
             try:
                 stop_all_motors()
@@ -152,7 +161,7 @@ def on_message(client, userdata, msg):
                 print(f"\n⚠️ Error stopping motors: {e}")
             stop_mqtt()
             subprocess.Popen(["sudo", "shutdown", "now"])
-    elif msg.topic == "billy/say":
+    elif msg.topic == MQTT_TOPIC_SAY:
         print(f"📩 Received SAY command: {msg.payload.decode()}")
 
         import asyncio
