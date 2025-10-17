@@ -1,0 +1,16 @@
+{% macro section_card(section_id, title, extra_classes="") %}
+<div class="bg-zinc-900/50 backdrop-blur-xs border border-zinc-700 p-4 md:p-6 rounded-lg shadow-sm mb-6 collapsible-section{% if extra_classes %} {{ extra_classes }}{% endif %}" id="{{ section_id }}">
+    <h3 class="flex items-center gap-2 cursor-pointer group text-lg grow justify-between font-bold mb-4 text-slate-200">
+        {{ title }}
+        <span class="material-icons transition-transform duration-200 ml-2 rotate-0">expand_more</span>
+    </h3>
+    {{ caller() }}
+</div>
+{% endmacro %}
+
+{% macro icon_button(button_id, icon_name, title, extra_classes="", icon_extra_classes="", text="", button_type="button") %}
+<button id="{{ button_id }}" class="bg-zinc-700 hover:bg-zinc-600 text-white text-sm py-1 px-2 rounded flex gap-1.5 items-center cursor-pointer{% if extra_classes %} {{ extra_classes }}{% endif %}" title="{{ title }}" type="{{ button_type }}">
+    <span class="material-icons{% if icon_extra_classes %} {{ icon_extra_classes }}{% endif %}">{{ icon_name }}</span>
+    {% if text %}{{ text }}{% endif %}
+</button>
+{% endmacro %}
