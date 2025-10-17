@@ -1,3 +1,4 @@
+{% import "macros.html" as ui %}
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
@@ -32,35 +33,15 @@
                 </button>
             </div>
 
-            <button id="toggle-log-btn"
-                    class="bg-zinc-700 hover:bg-zinc-600 text-white text-sm py-1 px-2 rounded flex gap-1.5 items-center cursor-pointer"
-                    title="Show debug log">
-                <span class="material-icons bug_report">bug_report</span>
-            </button>
+            {{ ui.icon_button("toggle-log-btn", "bug_report", "Show debug log", icon_extra_classes="bug_report") }}
 
-            <button id="toggle-env-btn"
-                    class="bg-zinc-700 hover:bg-zinc-600 text-white text-sm py-1 px-2 rounded flex gap-1.5 items-center cursor-pointer"
-                    title="Show .env file editor">
-                <span class="material-icons">admin_panel_settings</span>
-            </button>
+            {{ ui.icon_button("toggle-env-btn", "admin_panel_settings", "Show .env file editor") }}
 
-            <button id="toggle-motion-btn"
-                    class="bg-zinc-700 hover:bg-zinc-600 text-white text-sm py-1 px-2 rounded flex gap-1.5 items-center cursor-pointer"
-                    title="Toggle UI animations">
-                <span class="material-icons">blur_on</span>
-            </button>
+            {{ ui.icon_button("toggle-motion-btn", "blur_on", "Toggle UI animations") }}
 
-            <button id="reboot-billy-btn"
-                    class="bg-zinc-700 hover:bg-zinc-600 text-white text-sm py-1 px-2 rounded flex gap-1.5 items-center cursor-pointer"
-                    title="Reboot Billy">
-                <span class="material-icons">restart_alt</span>
-            </button>
+            {{ ui.icon_button("reboot-billy-btn", "restart_alt", "Reboot Billy") }}
 
-            <button id="shutdown-billy-btn"
-                    class="bg-zinc-700 hover:bg-zinc-600 text-white text-sm py-1 px-2 rounded flex gap-1.5 items-center cursor-pointer"
-                    title="Shutdown Billy">
-                <span class="material-icons">power_off</span>
-            </button>
+            {{ ui.icon_button("shutdown-billy-btn", "power_off", "Shutdown Billy") }}
         </div>
     </div>
 
@@ -125,12 +106,7 @@
             <form id="config-form" class="p-4 md:p-6">
 
                 <!-- Software Settings -->
-                <div class="bg-zinc-900/50 backdrop-blur-xs border border-zinc-700 p-4 md:p-6 rounded-lg shadow-sm mb-6 collapsible-section"
-                     id="section-software">
-                    <h3 class="flex items-center gap-2 cursor-pointer group text-lg grow justify-between font-bold mb-4 text-slate-200">
-                        Software Settings
-                        <span class="material-icons transition-transform duration-200 ml-2 rotate-0">expand_more</span>
-                    </h3>
+                {% call ui.section_card("section-software", "Software Settings") %}
 
                     <div class="mb-4 relative">
                         <label for="OPENAI_API_KEY"
@@ -279,15 +255,10 @@
                             {% endfor %}
                         </select>
                     </div>
-                </div>
+                {% endcall %}
 
                 <!-- Hardware Settings -->
-                <div class="bg-zinc-900/50 backdrop-blur-xs border border-zinc-700 p-4 md:p-6 rounded-lg shadow-sm mb-6 collapsible-section"
-                     id="section-hardware">
-                    <h3 class="flex items-center gap-2 cursor-pointer group text-lg grow justify-between font-bold mb-4 text-slate-200">
-                        Hardware Settings
-                        <span class="material-icons transition-transform duration-200 ml-2 rotate-0">expand_more</span>
-                    </h3>
+                {% call ui.section_card("section-hardware", "Hardware Settings") %}
                     <div class="mb-4">
                         <label for="BILLY_MODEL" class="block font-semibold text-sm text-slate-300">
                             Billy Version
@@ -334,15 +305,10 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                {% endcall %}
 
                 <!-- Audio -->
-                <div class="bg-zinc-900/50 backdrop-blur-xs border border-zinc-700 p-4 md:p-6 rounded-lg shadow-sm mb-6 collapsible-section"
-                     id="section-audio">
-                    <h3 class="flex items-center gap-2 cursor-pointer group text-lg grow justify-between font-bold mb-4 text-slate-200">
-                        Audio Settings
-                        <span class="material-icons transition-transform duration-200 ml-2 rotate-0">expand_more</span>
-                    </h3>
+                {% call ui.section_card("section-audio", "Audio Settings") %}
 
                     <div class="flex items-center gap-2 mb-4">
                         <span class="material-icons">settings_voice</span>
@@ -479,15 +445,10 @@
                             </button>
                         </div>
                     </div>
-                </div>
+                {% endcall %}
 
                 <!-- MQTT Settings -->
-                <div class="bg-zinc-900/50 backdrop-blur-xs border border-zinc-700 p-4 md:p-6 rounded-lg shadow-sm mb-6 collapsible-section"
-                     id="section-mqtt">
-                    <h3 class="flex items-center gap-2 cursor-pointer group text-lg grow justify-between font-bold mb-4 text-slate-200">
-                        MQTT Settings
-                        <span class="material-icons transition-transform duration-200 ml-2 rotate-0">expand_more</span>
-                    </h3>
+                {% call ui.section_card("section-mqtt", "MQTT Settings") %}
 
                     <div class="mb-4">
                         <label for="MQTT_HOST" class="block font-semibold text-sm text-slate-300">MQTT Host</label>
@@ -533,15 +494,10 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                {% endcall %}
 
                 <!-- Home Assistant -->
-                <div class="bg-zinc-900/50 backdrop-blur-xs border border-zinc-700 p-4 md:p-6 rounded-lg shadow-sm mb-6 collapsible-section"
-                     id="section-ha">
-                    <h3 class="flex items-center gap-2 cursor-pointer group text-lg grow justify-between font-bold mb-4 text-slate-200">
-                        Home Assistant
-                        <span class="material-icons transition-transform duration-200 ml-2 rotate-0">expand_more</span>
-                    </h3>
+                {% call ui.section_card("section-ha", "Home Assistant") %}
                     <div class="mb-4">
                         <label for="HA_HOST" class="block font-semibold text-sm text-slate-300">Home Assistant
                             Host</label>
@@ -595,7 +551,7 @@
                             {% endfor %}
                         </select>
                     </div>
-                </div>
+                {% endcall %}
             </form>
 
             <div class="sticky bottom-0 z-10 p-4">
@@ -643,25 +599,15 @@
         <section class="space-y-4 md:space-y-6">
             <form id="persona-form" class="p-4 md:p-6">
                 <!-- Persona Traits -->
-                <div class="bg-zinc-900/50 backdrop-blur-xs border border-zinc-700 p-4 md:p-6 rounded-lg shadow-sm mb-6 collapsible-section"
-                     id="section-persona-traits">
-                    <h3 class="flex items-center gap-2 cursor-pointer group text-lg grow justify-between font-bold mb-4 text-slate-200">
-                        Persona Traits
-                        <span class="material-icons transition-transform duration-200 ml-2 rotate-0">expand_more</span>
-                    </h3>
+                {% call ui.section_card("section-persona-traits", "Persona Traits") %}
                     <div id="personality-sliders" class="space-y-4">
                         <!-- JS will populate this -->
                     </div>
-                </div>
+                {% endcall %}
 
                 <!-- Backstory -->
 
-                <div class="bg-zinc-900/50 backdrop-blur-xs border border-zinc-700 p-4 md:p-6 rounded-lg shadow-sm mb-6 collapsible-section"
-                     id="section-backstory-instructions">
-                    <h3 class="flex items-center gap-2 cursor-pointer group text-lg grow justify-between font-bold mb-4 text-slate-200">
-                        Backstory
-                        <span class="material-icons transition-transform duration-200 ml-2 rotate-0">expand_more</span>
-                    </h3>
+                {% call ui.section_card("section-backstory-instructions", "Backstory") %}
                     <div>
                         <div id="backstory-fields" class="space-y-2"></div>
                         <button type="button" onclick="addBackstoryField()"
@@ -670,29 +616,19 @@
                             Add Field
                         </button>
                     </div>
-                </div>
+                {% endcall %}
 
                 <!-- Meta Instructions -->
-                <div class="bg-zinc-900/50 backdrop-blur-xs border border-zinc-700 p-4 md:p-6 rounded-lg shadow-sm mb-6 collapsible-section"
-                     id="section-instructions">
-                    <h3 class="flex items-center gap-2 cursor-pointer group text-lg grow justify-between font-bold mb-4 text-slate-200">
-                        Additional Instructions
-                        <span class="material-icons transition-transform duration-200 ml-2 rotate-0">expand_more</span>
-                    </h3>
+                {% call ui.section_card("section-instructions", "Additional Instructions") %}
                     <div>
                         <textarea name="META" id="meta-text" rows="16"
                                   class="w-full p-3 mt-1 bg-zinc-800 text-white rounded focus:outline-none focus:ring-2 focus:ring-cyan-500"
                                   spellcheck="false"></textarea>
                     </div>
-                </div>
+                {% endcall %}
 
                 <!-- Wake-up Sounds -->
-                <div class="bg-zinc-900/50 backdrop-blur-xs border border-zinc-700 p-4 md:p-6 rounded-lg shadow-sm mb-6 collapsible-section"
-                     id="section-wakeup-sounds">
-                    <h3 class="flex items-center gap-2 cursor-pointer group text-lg grow justify-between font-bold mb-4 text-slate-200">
-                        Wake-up Sounds
-                        <span class="material-icons transition-transform duration-200 ml-2 rotate-0">expand_more</span>
-                    </h3>
+                {% call ui.section_card("section-wakeup-sounds", "Wake-up Sounds") %}
 
                     <div id="wakeup-sound-list" class="space-y-2">
 
@@ -703,7 +639,7 @@
                         <span class="material-icons align-middle mr-1">add_circle_outline</span>
                         Add Wake-up Sound
                     </button>
-                </div>
+                {% endcall %}
 
             </form>
 
